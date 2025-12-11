@@ -77,49 +77,37 @@ class Game {
     }
   }
 
-  deleteZero(arr) {
-    return arr.filter((item) => {
-      return item !== 0;
-    });
-  }
-
   slide(row) {
-    const newRow = this.deleteZero(row);
+    const newRow = row.filter((item) => item !== 0);
+    const result = [];
 
-    for (let i = 0; i < newRow.length; i++) {
-      if (newRow[i] === newRow[i + 1]) {
-        newRow[i] *= 2;
-        newRow[i + 1] = 0;
-        this.score += newRow[i];
+    for (let r = 0; r < newRow.length; r++) {
+      if (newRow[r] === newRow[r + 1]) {
+        result.push(newRow[r] * 2);
+        this.score += newRow[r] * 2;
+        r++;
+      } else {
+        result.push(newRow[r]);
       }
     }
 
-    return this.deleteZero(newRow);
+    return result;
   }
 
   isWin() {
     return JSON.stringify(this.board).includes(2048);
   }
 
-  hasEmptyCell() {
+  canMove() {
+    let move = false;
     let hasEmpty = false;
 
     for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.columns; c++) {
+      for (let c = 0; c < this.columns - 1; c++) {
         if (!this.board[r][c]) {
           hasEmpty = true;
         }
-      }
-    }
 
-    return hasEmpty;
-  }
-
-  canMove() {
-    let move = false;
-
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.columns - 1; c++) {
         if (this.board[r][c] === this.board[r][c + 1]) {
           move = true;
         }
@@ -134,10 +122,18 @@ class Game {
       }
     }
 
-    return move;
+    if (move) {
+      return true;
+    }
+
+    if (hasEmpty) {
+      return true;
+    }
+
+    return false;
   }
 
-  processRow(row, isReversed = false) {
+  processRow(row, isReversed) {
     if (isReversed) {
       row.reverse();
     }
@@ -166,8 +162,37 @@ class Game {
       this.status = 'win';
     }
 
-    if (!this.canMove() && !this.hasEmptyCell()) {
+    if (!this.canMove()) {
       this.status = 'lose';
+    }
+  }
+
+  handleRow(direction) {
+    const isRight = direction === 'right';
+
+    for (let r = 0; r < this.rows; r++) {
+      const row = this.board[r];
+      const newRow = this.processRow(row, isRight);
+
+      this.board[r] = newRow;
+    }
+  }
+
+  handleColumn(direction) {
+    const isDown = direction === 'down';
+
+    for (let c = 0; c < this.columns; c++) {
+      const column = [];
+
+      for (let r = 0; r < this.rows; r++) {
+        column.push(this.board[r][c]);
+      }
+
+      const newColumm = this.processRow(column, isDown);
+
+      for (let i = 0; i < this.rows; i++) {
+        this.board[i][c] = newColumm[i];
+      }
     }
   }
 
@@ -178,13 +203,7 @@ class Game {
 
     const boardBeforeMove = JSON.stringify(this.board);
 
-    for (let r = 0; r < this.rows; r++) {
-      const row = this.board[r];
-      const Newrow = this.processRow(row);
-
-      this.board[r] = Newrow;
-    }
-
+    this.handleRow('left');
     this.finalizeMove(boardBeforeMove);
   }
 
@@ -195,13 +214,7 @@ class Game {
 
     const boardBeforeMove = JSON.stringify(this.board);
 
-    for (let r = 0; r < this.rows; r++) {
-      const row = this.board[r];
-      const newRow = this.processRow(row, true);
-
-      this.board[r] = newRow;
-    }
-
+    this.handleRow('right');
     this.finalizeMove(boardBeforeMove);
   }
 
@@ -212,20 +225,7 @@ class Game {
 
     const boardBeforeMove = JSON.stringify(this.board);
 
-    for (let c = 0; c < this.columns; c++) {
-      const column = [];
-
-      for (let r = 0; r < this.rows; r++) {
-        column.push(this.board[r][c]);
-      }
-
-      const newColumm = this.processRow(column);
-
-      for (let i = 0; i < this.rows; i++) {
-        this.board[i][c] = newColumm[i];
-      }
-    }
-
+    this.handleColumn('up');
     this.finalizeMove(boardBeforeMove);
   }
 
@@ -236,20 +236,7 @@ class Game {
 
     const boardBeforeMove = JSON.stringify(this.board);
 
-    for (let c = 0; c < this.columns; c++) {
-      const column = [];
-
-      for (let r = 0; r < this.rows; r++) {
-        column.push(this.board[r][c]);
-      }
-
-      const newColumm = this.processRow(column, true);
-
-      for (let i = 0; i < this.rows; i++) {
-        this.board[i][c] = newColumm[i];
-      }
-    }
-
+    this.handleColumn('down');
     this.finalizeMove(boardBeforeMove);
   }
 

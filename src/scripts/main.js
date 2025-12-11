@@ -47,15 +47,16 @@ const updateUI = () => {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < columns; c++) {
       const value = board[r][c];
+      const cell = cells[r][c];
+
+      cell.className = '';
+      cell.classList.add('field-cell');
 
       if (value) {
-        cells[r][c].innerText = value;
-        cells[r][c].className = '';
-        cells[r][c].classList.add('field-cell', `field-cell--${value}`);
+        cell.innerText = value;
+        cell.classList.add(`field-cell--${value}`);
       } else {
-        cells[r][c].innerText = '';
-        cells[r][c].className = '';
-        cells[r][c].classList.add('field-cell');
+        cell.innerText = '';
       }
     }
   }
